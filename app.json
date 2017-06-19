@@ -1,6 +1,3 @@
 {
-  "name": "Meetbot",
-  "scripts": {
-    "postdeploy": "python tasks/post-deploy.py"
-  }
+  "name": "Meetbot"
 }
