@@ -42,11 +42,11 @@ def fetch_bot_id(client):
 def trim_response(response, delimiter):
     return response.split(delimiter)[1].strip()
 
-def format_event(e):
-    return '  * _' + e + '_'
+def format_event((i, e)):
+    return '  [' + str(i) + '] _' + e + '_'
 
 def print_event_list(events):
-    return NEWLINE.join(map(format_event, events))
+    return NEWLINE.join(map(format_event, enumerate(events, start=1)))
 
 def handle_command(command, channel):
     response = "Not sure what you mean. Use the *" + CREATE_COMMAND + \
