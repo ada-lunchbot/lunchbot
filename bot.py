@@ -11,9 +11,8 @@ NEWLINE = '\n'
 
 # COMMANDS
 CREATE_COMMAND = 'create'
-SEE_COMMAND = 'what\'s up'
+SEE_COMMAND = 'what'
 JOIN_COMMAND = 'join'
-
 
 # global variables
 event_list = [
@@ -50,8 +49,17 @@ def fetch_bot_id(client):
 def trim_response(response, delimiter):
     return response.split(delimiter)[1].strip()
 
+def format_attendees(attendees):
+    if len(attendees) == 0:
+        return '*absolutely no one :(*'
+    attendee_names = map(lambda id: USERS[id], attendees)
+    return '*' + ', '.join(attendee_names) + '*'
+
+def format_event_name(index, name):
+    return '\t[' + str(index) + '] _' + name + '_'
+
 def format_event((i, e)):
-    return '  [' + str(i) + '] _' + e['name'] + '_'
+    return format_event_name(i, e['name']) + ' with ' + format_attendees(e['attendees'])
 
 def print_event_list(events):
     return NEWLINE.join(map(format_event, enumerate(events, start = 1)))
