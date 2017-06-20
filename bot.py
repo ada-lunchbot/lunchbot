@@ -1,5 +1,3 @@
-import tasks.post_deploy
-
 from os import environ
 from slackclient import SlackClient
 import time
