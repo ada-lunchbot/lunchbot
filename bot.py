@@ -7,8 +7,11 @@ import time
 # constants
 AT_BOT = ''
 CHANNELS = {}
-EXAMPLE_COMMAND = 'do'
+CREATE_COMMAND = 'create'
 BOT_NAME = 'meetbot'
+
+# global variables
+events = []
 
 def get_id_and_name(channel):
     return channel['id'], channel['name']
@@ -33,11 +36,15 @@ def fetch_bot_id(client):
             if 'name' in user and user.get('name') == BOT_NAME:
                 return '<@' + user.get('id') + '>'
 
+def trim_response(response, delimiter):
+    return response.split(delimiter)[1].strip()
+
 def handle_command(command, channel):
-    response = "Not sure what you mean. Use the *" + EXAMPLE_COMMAND + \
-               "* command with numbers, delimited by spaces."
-    if command.startswith(EXAMPLE_COMMAND):
-        response = "Sure...write some more code then I can do that!"
+    response = "Not sure what you mean. Use the *" + CREATE_COMMAND + \
+               "* command followed by a short description of the event."
+    if command.startswith(CREATE_COMMAND):
+        events.append(trim_response(command, CREATE_COMMAND))
+        response = 'Event created: _' + events[-1] + '_'
     slack_client.api_call('chat.postMessage', channel='#' + channel,
                           text=response, as_user=True)
 
@@ -46,8 +53,7 @@ def parse_slack_output(slack_rtm_output):
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
-                return output['text'].split(AT_BOT)[1].strip().lower(), \
-                       output['channel']
+                return trim_response(output['text'], AT_BOT).lower(), output['channel']
     return None, None
 
 slack_client = SlackClient(environ.get('SLACK_BOT_TOKEN'))
