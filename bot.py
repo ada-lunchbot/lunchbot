@@ -2,14 +2,19 @@ from os import environ
 from slackclient import SlackClient
 import time
 
-# constants
+# CONSTANTS
 AT_BOT = ''
 CHANNELS = {}
-CREATE_COMMAND = 'create'
 BOT_NAME = 'meetbot'
+NEWLINE = '\n'
+
+# COMMANDS
+CREATE_COMMAND = 'create'
+SEE_COMMAND = 'what\'s up'
 
 # global variables
-events = []
+event_list = ['drinks @ styx', 'refactoring some of our code', 'jamming session at Google']
+slack_client = SlackClient(environ.get('SLACK_BOT_TOKEN'))
 
 def get_id_and_name(channel):
     return channel['id'], channel['name']
@@ -37,12 +42,20 @@ def fetch_bot_id(client):
 def trim_response(response, delimiter):
     return response.split(delimiter)[1].strip()
 
+def format_event(e):
+    return '  * _' + e + '_'
+
+def print_event_list(events):
+    return NEWLINE.join(map(format_event, events))
+
 def handle_command(command, channel):
     response = "Not sure what you mean. Use the *" + CREATE_COMMAND + \
                "* command followed by a short description of the event."
     if command.startswith(CREATE_COMMAND):
-        events.append(trim_response(command, CREATE_COMMAND))
-        response = 'Event created: _' + events[-1] + '_'
+        event_list.append(trim_response(command, CREATE_COMMAND))
+        response = 'Event created: _' + event_list[-1] + '_'
+    elif command.startswith(SEE_COMMAND):
+        response = 'Sure, here\'s what\'s going on:\n' + print_event_list(event_list)
     slack_client.api_call('chat.postMessage', channel='#' + channel,
                           text=response, as_user=True)
 
@@ -54,16 +67,21 @@ def parse_slack_output(slack_rtm_output):
                 return trim_response(output['text'], AT_BOT).lower(), output['channel']
     return None, None
 
-slack_client = SlackClient(environ.get('SLACK_BOT_TOKEN'))
-if slack_client.rtm_connect():
-    print('Meetbot connected and running!')
-    CHANNELS = fetch_channels(slack_client)
-    AT_BOT = fetch_bot_id(slack_client)
+# Main
+def main():
+    if slack_client.rtm_connect():
+        print('Meetbot connected and running!')
+        global CHANNELS
+        CHANNELS = fetch_channels(slack_client)
+        global AT_BOT
+        AT_BOT = fetch_bot_id(slack_client)
 
-    while True:
-        command, channel_id = parse_slack_output(slack_client.rtm_read())
-        if command and channel_id:
-            handle_command(command, CHANNELS[channel_id])
-        time.sleep(0.5)
-else:
-    print('Connection failed. Invalid Slack token or bot ID?')
+        while True:
+            command, channel_id = parse_slack_output(slack_client.rtm_read())
+            if command and channel_id:
+                handle_command(command, CHANNELS[channel_id])
+            time.sleep(0.5)
+    else:
+        print('Connection failed. Invalid Slack token or bot ID?')
+
+main()
