@@ -5,6 +5,7 @@ import time
 # CONSTANTS
 AT_BOT = ''
 CHANNELS = {}
+USERS = {}
 BOT_NAME = 'meetbot'
 NEWLINE = '\n'
 
@@ -23,19 +24,18 @@ event_list = [
 
 slack_client = SlackClient(environ.get('SLACK_BOT_TOKEN'))
 
+def get_id_and_name(entity):
+    return entity['id'], entity['name']
 
-def get_id_and_name(channel):
-    return channel['id'], channel['name']
+def make_dict(entity_list):
+    return dict(map(get_id_and_name, entity_list))
 
-def make_channel_dict(channels_list):
-    return dict(map(get_id_and_name, channels_list))
-
-def fetch_channels(client):
-    response = client.api_call('channels.list')
+def fetch(client, path, key):
+    response = client.api_call(path)
     if response.get('ok'):
-        return make_channel_dict(response.get('channels'))
+        return make_dict(response.get(key))
     else:
-        print('Error: no channels found')
+        print('Error fetching from api')
         return {}
 
 def fetch_bot_id(client):
@@ -85,9 +85,11 @@ def main():
     if slack_client.rtm_connect():
         print('Meetbot connected and running!')
         global CHANNELS
-        CHANNELS = fetch_channels(slack_client)
+        CHANNELS = fetch(slack_client, 'channels.list', 'channels')
         global AT_BOT
         AT_BOT = fetch_bot_id(slack_client)
+        global USERS
+        USERS = fetch(slack_client, 'users.list', 'members')
 
         while True:
             command, channel_id, user = parse_slack_output(slack_client.rtm_read())
