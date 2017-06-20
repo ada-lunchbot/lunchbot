@@ -11,6 +11,8 @@ NEWLINE = '\n'
 # COMMANDS
 CREATE_COMMAND = 'create'
 SEE_COMMAND = 'what\'s up'
+JOIN_COMMAND = 'join'
+
 
 # global variables
 event_list = ['drinks @ styx', 'refactoring some of our code', 'jamming session at Google']
@@ -56,6 +58,8 @@ def handle_command(command, channel):
         response = 'Event created: _' + event_list[-1] + '_'
     elif command.startswith(SEE_COMMAND):
         response = 'Sure, here\'s what\'s going on:\n' + print_event_list(event_list)
+    elif command.startswith(JOIN_COMMAND):
+        response = 'You\'ve joined the event: _' + event_list[int(trim_response(command, JOIN_COMMAND)) - 1] + '_'  
     slack_client.api_call('chat.postMessage', channel='#' + channel,
                           text=response, as_user=True)
 
